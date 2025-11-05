@@ -30,17 +30,28 @@ jobs:
           # Extract the AppImage
           ./WeChatLinux_x86_64.AppImage --appimage-extract
 
-          # Get strings from the wechat binary and find version
-          VERSION=$(strings squashfs-root/usr/bin/wechat | \
-            grep -E '^4\.1\.0\.[0-9]+$' | head -n 1)
+          # Get base version from wechat.desktop
+          BASE_VERSION=$(grep -oP 'X-AppImage-Version=\K.*' \
+            squashfs-root/wechat.desktop | tr -d '\r')
 
-          if [ -z "$VERSION" ]; then
-            echo "Error: Could not extract version"
+          if [ -z "$BASE_VERSION" ]; then
+            echo "Error: Could not extract base version from wechat.desktop"
             exit 1
           fi
 
-          echo "Version found: $VERSION"
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          # Get detailed version from the wechat binary
+          DETAILED_VERSION=$(strings squashfs-root/usr/bin/wechat | \
+            grep -E '^4\.1\.0\.[0-9]+$' | head -n 1)
+
+          if [ -z "$DETAILED_VERSION" ]; then
+            echo "Error: Could not extract detailed version from binary"
+            exit 1
+          fi
+
+          echo "Base version: $BASE_VERSION"
+          echo "Detailed version: $DETAILED_VERSION"
+          echo "version=$DETAILED_VERSION" >> $GITHUB_OUTPUT
+          echo "base_version=$BASE_VERSION" >> $GITHUB_OUTPUT
 
           # Clean up extracted files to save space
           rm -rf squashfs-root
