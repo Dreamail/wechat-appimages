@@ -39,16 +39,18 @@ jobs:
             exit 1
           fi
 
-          # Get detailed version from the wechat binary
+          echo "Base version: $BASE_VERSION"
+
+          # Escape dots for regex and search for detailed version in binary
+          BASE_VERSION_ESCAPED=$(echo "$BASE_VERSION" | sed 's/\./\\./g')
           DETAILED_VERSION=$(strings squashfs-root/usr/bin/wechat | \
-            grep -E '^4\.1\.0\.[0-9]+$' | head -n 1)
+            grep -E "^${BASE_VERSION_ESCAPED}\.[0-9]+$" | head -n 1)
 
           if [ -z "$DETAILED_VERSION" ]; then
             echo "Error: Could not extract detailed version from binary"
             exit 1
           fi
 
-          echo "Base version: $BASE_VERSION"
           echo "Detailed version: $DETAILED_VERSION"
           echo "version=$DETAILED_VERSION" >> $GITHUB_OUTPUT
           echo "base_version=$BASE_VERSION" >> $GITHUB_OUTPUT
